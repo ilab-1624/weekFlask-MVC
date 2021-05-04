@@ -49,7 +49,7 @@ class PpeDetect:
     def ppeDetect(self):
         image = self.__dataModel["frame"]["openCV"]["imageBase64"]
         self.__client = boto3.client('rekognition',aws_access_key_id=self.__aws_access_key_id, aws_secret_access_key=self.__aws_secret_access_key,region_name=self.__region_name)
-        response = self.__client.detect_protective_equipment(Image={'S3Object':{'Bucket':"face-images-t3",'Name':self.__dataModel["frame"]["captureResult"]["id"]}},
+        response = self.__client.detect_protective_equipment(Image={'S3Object':{'Bucket':self.__bucket,'Name':self.__dataModel["frame"]["captureResult"]["id"]}},
                                                             SummarizationAttributes={'MinConfidence':70, 'RequiredEquipmentTypes':['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']}
         )
         emptyModel = {}
