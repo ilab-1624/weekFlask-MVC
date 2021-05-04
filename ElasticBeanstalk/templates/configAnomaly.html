@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>組態設定</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+
+
+<body onload="loadAiConfig()">
+    <style>
+        .inline {
+            display: inline;
+        }
+
+        .bottom-shape2 {
+            padding: 10px 20px;
+            font-size: 25px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin="anonymous"></script>
+    <form method="GET">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/config">上一頁</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll"
+                    aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarScroll">
+                    <ul class="navbar-nav me-auto my-2 my-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/objectDetect/update">物件偵測</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/memberRecognition/update">人臉辨識</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/ppeDetect/update">裝備查驗</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/forecast/update">人流預測</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </form>
+    <form method="POST">
+        <center>
+            <label for="lname">
+                <font size=8>異常偵測</font>
+            </label>
+
+            <br><br><br>
+            <label>
+                <font size=5>成員離崗偵測</font>
+            </label>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <div class="form-switch inline ">
+                <input class="form-check-input buttom-shape2 bottom-shape2" type="checkbox" id="memberDetection"
+                    name="memberDetection" value="memberDetection" onclick="switchChange(this.checked,this.name)" />
+            </div>
+            <br>
+            <label>
+                <font size=5>非成員滯留偵測</font>
+            </label>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <div class="form-switch inline ">
+                <input class="form-check-input buttom-shape2 bottom-shape2" type="checkbox" id="nonMemberDetection"
+                    name="nonMemberDetection" value="nonMemberDetection"
+                    onclick="switchChange(this.checked,this.name)" />
+            </div>
+            <br>
+            <label>
+                <font size=5>非成員左線逾界</font>
+            </label>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <div class="form-switch inline ">
+                <input class="form-check-input buttom-shape2 bottom-shape2" type="checkbox" id="crossLeftLineAlert"
+                    name="crossLeftLineAlert" value="crossLeftLineAlert"
+                    onclick="switchChange(this.checked,this.name)" />
+            </div>
+            <br>
+            <label>
+                <font size=5>非成員右線逾界</font>
+            </label>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <div class="form-switch inline ">
+                <input class="form-check-input buttom-shape2 bottom-shape2" type="checkbox" id="crossRightLineAlert"
+                    name="crossRightLineAlert" value="crossRightLineAlert"
+                    onclick="switchChange(this.checked,this.name)" />
+            </div>
+
+            <br>
+
+        </center>
+    </form>
+
+
+</body>
+
+</html>
+
+<script>
+    function loadAiConfig() {
+        let aiConfig = JSON.parse('{{aiConfig | tojson}}');
+        if (aiConfig["memberDetection"]) {
+            document.getElementById("memberDetection").checked = true;
+        }
+        if (aiConfig["nonMemberDetection"]) {
+            document.getElementById("nonMemberDetection").checked = true;
+        }
+        if (aiConfig["crossLeftLineAlert"]) {
+            document.getElementById("crossLeftLineAlert").checked = true;
+        }
+        if (aiConfig["crossRightLineAlert"]) {
+            document.getElementById("crossRightLineAlert").checked = true;
+        }
+    }
+
+    function switchChange(checked, name) {
+        var aiConfig = {
+            "aiApp": "anomalyDetection",
+            "key": name,
+            "value": checked
+        }
+
+        updateAiConfig(aiConfig);
+    }
+
+    function updateAiConfig(aiConfig) {
+        $.ajax({
+            url: '/updateAiConfig',
+            data: JSON.stringify(aiConfig),
+            type: 'POST',
+            dataType: "json",
+            success: function (response) {
+                console.log('success');
+                alert('修改成功');
+
+
+            },
+            error: function (error) {
+                console.log(error);
+                alert('修改失敗:' + error);
+            }
+        });
+    }
+</script>

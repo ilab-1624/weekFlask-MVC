@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>組態設定</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+
+<!--css Class-->
+
+<body>
+    <script type="text/javascript">
+        let currentURL = new URL(location.href);
+        let urlParams = currentURL.searchParams;
+        let uid = urlParams.get('uid');
+        let newURL = location.href.replace(currentURL.search, "")
+        if (location.href.indexOf("?") != -1) {
+            window.history.pushState({}, 0, newURL);
+        }
+    </script>
+    <style>
+        .bottom-shape2 {
+            padding: 10px 20px;
+            font-size: 20px;
+            border-radius: 10px;
+            width: 65%;
+        }
+    </style>
+    <form method="GET">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/config">上一頁</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll"
+                    aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarScroll">
+                    <ul class="navbar-nav me-auto my-2 my-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/objectDetect/update">物件偵測</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/memberRecognition/update">人臉辨識</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/ppeDetect/update">裝備查驗</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/config/fraudDetect/update">異常偵測</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </form>
+    <form method="POST">
+        <center>
+            <label for="lname">
+                <font size=8>人流預測</font>
+            </label>
+        
+        <br><br><br>
+        <label for="lname">
+            <font size=6>信心水準:</font>
+        </label>
+        <input type="number" id="confidence" name="confidence" value="{{aiConfig['confidence']}}" min="1"
+            style="font-size:25px;" onchange="numberChange(this.name, this.value)" />
+        <br>
+       
+            <br>
+        </center>
+    </form>
+
+
+</body>
+
+</html>
+
+<script>
+    function numberChange(name, value) {
+        var aiConfig = {
+            "aiApp": "forecast",
+            "key": name,
+            "value": value
+        }
+
+        updateAiConfig(aiConfig);
+    }
+
+    function updateAiConfig(aiConfig) {
+        $.ajax({
+            url: '/updateAiConfig',
+            data: JSON.stringify(aiConfig),
+            type: 'POST',
+            dataType: "json",
+            success: function (response) {
+                console.log('success');
+                alert('修改成功');
+
+
+            },
+            error: function (error) {
+                console.log(error);
+                alert('修改失敗:' + error);
+            }
+        });
+    }
+</script>
