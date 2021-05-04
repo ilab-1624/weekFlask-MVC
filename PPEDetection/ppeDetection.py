@@ -5,24 +5,25 @@ from datetime import datetime
 import json
 import psycopg2
 
-class PpeDetect:
-    def __init__(self, dataModel, aws_access_key_id, aws_secret_access_key, region_name,table,bucket):
+class PpeDetect: 
+    def __init__(self, dataModel, aws_access_key_id, aws_secret_access_key, region_name,table):
         self.__aws_access_key_id = aws_access_key_id
         self.__aws_secret_access_key = aws_secret_access_key
         self.__region_name = region_name
+        
         self.__dynamoDbResource = boto3.resource(
             'dynamodb', 
             aws_access_key_id=self.__aws_access_key_id, 
             aws_secret_access_key=self.__aws_secret_access_key,
             region_name=self.__region_name
         )
+        
         self.__dataModel = dataModel
         self.__table = self.__dynamoDbResource.Table(table)
-        self.__bucket = bucket
         self.__outputModel = {
             "capture":{
-                "frameId": dataModel["frame"]["captureResult"]["id"],
-                "timestamp": dataModel["frame"]["captureResult"]["timestamp"],
+                "frameId": dataModel["frame"]["capture"]["id"],
+                "timestamp": dataModel["frame"]["capture"]["timestamp"],
                 "sourceImageUrl":""
             },
             "ppeDetection":{
@@ -39,18 +40,18 @@ class PpeDetect:
     
     def storeImage(self):
         client = boto3.client('s3', aws_access_key_id=self.__aws_access_key_id, aws_secret_access_key=self.__aws_secret_access_key,region_name=self.__region_name)
-        image = self.__dataModel["frame"]["openCV"]["imageBase64"]
+        image = self.__dataModel['frame']["OpenCV"]["imageBase64"]
         image = base64.b64decode(image)
-        fileName = self.__dataModel["frame"]["captureResult"]["id"]
-        bucketName = self.__bucket
+        fileName = self.__dataModel["frame"]["capture"]["id"]
+        bucketName = self.__dataModel["config"]["s3Bucket"]
         client.put_object(ACL='public-read',Body=image, Bucket=bucketName, Key=fileName ,ContentEncoding='base64',ContentType='image/jpeg')
         self.__outputModel["capture"]["sourceImageUrl"] = 'https://' + bucketName + '.s3-' + self.__region_name + '.amazonaws.com/' + fileName
     
     def ppeDetect(self):
-        image = self.__dataModel["frame"]["openCV"]["imageBase64"]
+        image = self.__dataModel["frame"]["OpenCV"]["imageBase64"]
         self.__client = boto3.client('rekognition',aws_access_key_id=self.__aws_access_key_id, aws_secret_access_key=self.__aws_secret_access_key,region_name=self.__region_name)
-        response = self.__client.detect_protective_equipment(Image={'S3Object':{'Bucket':self.__bucket,'Name':self.__dataModel["frame"]["captureResult"]["id"]}},
-                                                            SummarizationAttributes={'MinConfidence':70, 'RequiredEquipmentTypes':['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']}
+        response = self.__client.detect_protective_equipment(Image={'S3Object':{'Bucket':self.__dataModel["config"]["s3Bucket"],'Name':self.__dataModel["frame"]["capture"]["id"]}},
+                                                            SummarizationAttributes={'MinConfidence':self.__dataModel["config"]["threshold"], 'RequiredEquipmentTypes':['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']}
         )
         emptyModel = {}
         self.__outputModel["ppeDetection"]["personCount"] = len(response["Persons"])
@@ -111,12 +112,12 @@ class PpeDetect:
     def query_config(self):
         response = self.__table.get_item(
             Key={
-                'agent': self.__dataModel["site"],
+                'agent': self.__dataModel["agent"],
             }
         )
 
         item = response['Item']
-        print(item)
+        #print(item)
         aiConfig = item['aiApps']['ppeValidation']
         self.__dataModel["config"] = aiConfig
         #print(aiConfig)
@@ -126,11 +127,11 @@ class PpeDetect:
         self.__outputModel["config"]["helmetDetection"] = self.__dataModel["config"]["helmetDetection"]
         self.__outputModel["config"]["glovesDetection"] = self.__dataModel["config"]["glovesDetection"]
         return self.__outputModel
-    
-    """def redshiftInject(self):
+
+    def redshiftInject(self):
         
         # model = json.loads(event)
-        conn = psycopg2.connect(dbname='', host="", port='', user='', password='')
+        conn = psycopg2.connect(dbname='dev', host="demo0206.cec0m4zxpcqk.us-west-2.redshift.amazonaws.com", port='5439', user='awsuser', password='Ilab1624taipeitech')
         cur = conn.cursor();    
         
         for i in range(self.__outputModel['ppeDetection']['personCount']):
@@ -177,4 +178,4 @@ class PpeDetect:
                 
                 ))
         
-            conn.commit()"""
+            conn.commit()
