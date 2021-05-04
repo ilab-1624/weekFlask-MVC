@@ -6,7 +6,7 @@ import json
 import psycopg2
 
 class PpeDetect:
-    def __init__(self, dataModel, aws_access_key_id, aws_secret_access_key, region_name,table):
+    def __init__(self, dataModel, aws_access_key_id, aws_secret_access_key, region_name,table,bucket):
         self.__aws_access_key_id = aws_access_key_id
         self.__aws_secret_access_key = aws_secret_access_key
         self.__region_name = region_name
@@ -18,7 +18,7 @@ class PpeDetect:
         )
         self.__dataModel = dataModel
         self.__table = self.__dynamoDbResource.Table(table)
-        
+        self.__bucket = bucket
         self.__outputModel = {
             "capture":{
                 "frameId": dataModel["frame"]["captureResult"]["id"],
@@ -42,7 +42,7 @@ class PpeDetect:
         image = self.__dataModel["frame"]["openCV"]["imageBase64"]
         image = base64.b64decode(image)
         fileName = self.__dataModel["frame"]["captureResult"]["id"]
-        bucketName = "face-images-t3"
+        bucketName = self.__bucket
         client.put_object(ACL='public-read',Body=image, Bucket=bucketName, Key=fileName ,ContentEncoding='base64',ContentType='image/jpeg')
         self.__outputModel["capture"]["sourceImageUrl"] = 'https://' + bucketName + '.s3-' + self.__region_name + '.amazonaws.com/' + fileName
     
