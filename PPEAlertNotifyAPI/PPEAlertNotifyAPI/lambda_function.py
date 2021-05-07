@@ -6,7 +6,7 @@ from notification import SourceImageMessage, ValidationResultMessage, AlertNotif
 
 
 def lambda_handler(event, context):
-    dataModel = json.loads(event)
+    dataModel = event
     
     if (dataModel['ppeDetection']['personCount'] > 0):
         # declare classes
